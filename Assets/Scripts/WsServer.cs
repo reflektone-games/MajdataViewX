@@ -92,7 +92,6 @@ namespace MajdataViewX
 
         public void OnPauseRequestReceived(PauseRequest req)
         {
-            if (_screenRecorder.IsRecording) return;
             _playManager.PauseAsync()
                         .ContinueWith(() => Send(new PauseResponse { accepted = true }))
                         .Forget();

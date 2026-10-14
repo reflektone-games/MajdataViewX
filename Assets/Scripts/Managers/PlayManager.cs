@@ -185,7 +185,7 @@ namespace MajdataViewX.Managers
                 return;
 
             isBusy = true;
-            var isRecording = string.IsNullOrEmpty(recordPath);
+            var isRecording = !string.IsNullOrEmpty(recordPath);
 
             try
             {
