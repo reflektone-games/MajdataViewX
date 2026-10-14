@@ -81,7 +81,7 @@ namespace MajdataViewX.Managers
         public const int ALL_PERFECT = 15;
 
         private bool waitingForTrackAudioStart;
-        public bool IsShowingSongDetail => _timeProvider.AudioTime <= recordingInitialAudioTime + TimeProvider.SONG_DETAIL_OFFSET;
+        public bool IsShowingSongDetail => _timeProvider.AudioTime <= recordingInitialAudioTime + TimeProvider.SongDetailOffset;
 
         private bool isInited;
 
@@ -476,7 +476,7 @@ namespace MajdataViewX.Managers
             var trackOffset = TRACK_ANSWER_PLAYBACK_OFFSET_SEC;
             var trackOutputStartTime = trackOffset - recordingInitialAudioTime;
             var leadAndTail = trackOutputStartTime
-                + TimeProvider.SONG_DETAIL_OFFSET
+                + TimeProvider.SongDetailOffset
                 + _noteSfx[ALL_PERFECT].Length;
             var totalLen = _trackSample!.Length / recordingSpeed + leadAndTail; // 留给开头演出和结尾AP音效
             var size = (int)Math.Ceiling(Math.Max(0.1, totalLen) * SAMPLERATE) * CHANNELS;
@@ -725,7 +725,7 @@ namespace MajdataViewX.Managers
                     }
                 }
             }
-            var trackStartFrameCount = (int)((initialTrackSec + TimeProvider.SONG_DETAIL_OFFSET) * SAMPLERATE);
+            var trackStartFrameCount = (int)((initialTrackSec + TimeProvider.SongDetailOffset) * SAMPLERATE);
             var trackFrameCount = _trackSampleData.Length / CHANNELS;
             var recordingFrameCount = recordingBuffer.Length / CHANNELS;
 

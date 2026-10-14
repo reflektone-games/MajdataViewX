@@ -38,7 +38,7 @@ namespace MajdataViewX.Notes.Updaters
 
         public void Execute(int index)
         {
-            if (!TimeData.IsStart)
+            if (!TimeData.isStart)
             {
                 SeeOnlyUpdate(taps[index], index);
                 return;
@@ -53,7 +53,7 @@ namespace MajdataViewX.Notes.Updaters
             if (tap.IsFolded) return;
 
             var timing = tap.IsIgnoreSV
-                ? TimeData.NoteTime - tap.Time
+                ? TimeData.noteTime - tap.Time
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(tap.Time);
             if (timing > 0) return;
 
@@ -112,7 +112,7 @@ namespace MajdataViewX.Notes.Updaters
             if (tap.IsEnd) return;
 
             var timing = tap.IsIgnoreSV
-                ? TimeData.NoteTime - tap.Time
+                ? TimeData.noteTime - tap.Time
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(tap.Time);
 
             var rawDistance = timing * tap.Speed + 4.8f;
@@ -180,7 +180,7 @@ namespace MajdataViewX.Notes.Updaters
             if (tap.IsEnd) return;
             if (NoteHelper.Settings.AutoPlayMode is AutoPlayMode.Disable) return;
 
-            var timing = TimeData.NoteTime - tap.Time;
+            var timing = TimeData.noteTime - tap.Time;
             if (timing < InputManager.AUTOPLAY_START_SEC) return;
             switch (NoteHelper.Settings.AutoPlayMode)
             {
@@ -207,7 +207,7 @@ namespace MajdataViewX.Notes.Updaters
             if (tap.IsEnd) return;
             if (!NoteHelper.IsSimulated) return;
 
-            var diffSec = TimeData.NoteTime - tap.Time;
+            var diffSec = TimeData.noteTime - tap.Time;
 
             var buttonClicked = InputData.GetButtonState(tap.Key).IsPadDown;
             var sensorClicked = InputData.GetSensorState(tap.Key).IsPadDown;

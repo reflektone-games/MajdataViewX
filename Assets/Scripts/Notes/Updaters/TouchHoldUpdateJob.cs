@@ -47,7 +47,7 @@ namespace MajdataViewX.Notes.Updaters
 
         public void Execute(int index)
         {
-            if (!TimeData.IsStart)
+            if (!TimeData.isStart)
             {
                 SeeOnlyUpdate(touchHolds[index], index);
                 return;
@@ -63,7 +63,7 @@ namespace MajdataViewX.Notes.Updaters
             if (th.isFolded) return;
 
             var timing = th.isIgnoreSV
-                ? TimeData.NoteTime - th.time
+                ? TimeData.noteTime - th.time
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(th.time);
             var lastFor = th.isIgnoreSV
                 ? th.LastFor
@@ -159,7 +159,7 @@ namespace MajdataViewX.Notes.Updaters
             var sortTime = ((timePart << 11) | (uint)(index & 0x7FF)) & 0x3FFFFFFF;
 
             var timing = th.isIgnoreSV
-                ? TimeData.NoteTime - th.time
+                ? TimeData.noteTime - th.time
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(th.time);
             var lastFor = th.isIgnoreSV
                 ? th.LastFor
@@ -273,7 +273,7 @@ namespace MajdataViewX.Notes.Updaters
             if (th.isEnd) return;
             if (NoteHelper.Settings.AutoPlayMode is AutoPlayMode.Disable) return;
 
-            var timing = TimeData.NoteTime - th.time;
+            var timing = TimeData.noteTime - th.time;
             if (timing < InputManager.AUTOPLAY_START_SEC) return;
 
             switch (NoteHelper.Settings.AutoPlayMode)
@@ -327,7 +327,7 @@ namespace MajdataViewX.Notes.Updaters
             if (th.isEnd) return;
             if (!NoteHelper.IsSimulated) return;
 
-            var noteTime = TimeData.NoteTime;
+            var noteTime = TimeData.noteTime;
             var timing = noteTime - th.time;
 
             if (th.isMine)
@@ -404,7 +404,7 @@ namespace MajdataViewX.Notes.Updaters
                 return;
             }
 
-            if (!TimeData.IsStart) return;
+            if (!TimeData.isStart) return;
 
             var on = InputData.GetSensorState(th.sensor).Status;
 

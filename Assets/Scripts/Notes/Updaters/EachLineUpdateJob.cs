@@ -25,15 +25,15 @@ namespace MajdataViewX.Notes.Updaters
         public void Execute(int index)
         {
             ref var el = ref eachLines.ElementRef(index);
-            if (el.isEnd && TimeData.IsStart) return;
+            if (el.isEnd && TimeData.isStart) return;
 
             var timing = el.usingSV
                 ? TimeData.FakeNoteTime - TimeData.GetPositionAtTime(el.time)
-                : TimeData.NoteTime - el.time;
+                : TimeData.noteTime - el.time;
 
             if (timing >= 0)
             {
-                if (TimeData.IsStart)
+                if (TimeData.isStart)
                     el.isEnd = true;
                 return;
             }

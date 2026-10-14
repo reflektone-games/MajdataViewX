@@ -42,7 +42,7 @@ namespace MajdataViewX.Notes.Updaters
         public const float SlideOKFadeOutDuration = 8 * MajCtx.FRAME_LENGTH_SEC;
         public void Execute(int index)
         {
-            if (!TimeData.IsStart)
+            if (!TimeData.isStart)
             {
                 SeeOnlyUpdate(slides[index], index);
                 return;
@@ -56,11 +56,11 @@ namespace MajdataViewX.Notes.Updaters
         private void SeeOnlyUpdate(SlideData slide, int index)
         {
             if (slide.isFolded) return;
-            if (TimeData.NoteTime < slide.tapTime ||
-                TimeData.NoteTime > slide.shootTime + slide.LastFor) return;
+            if (TimeData.noteTime < slide.tapTime ||
+                TimeData.noteTime > slide.shootTime + slide.LastFor) return;
 
-            var tapTiming = TimeData.NoteTime - slide.tapTime;
-            var timing = TimeData.NoteTime - slide.shootTime;
+            var tapTiming = TimeData.noteTime - slide.tapTime;
+            var timing = TimeData.noteTime - slide.shootTime;
             slide.process = math.saturate(timing / math.max(slide.LastFor, 0.001f));
 
             // 播放期 processIdx 只增不减，暂停查看需按当前时间重建
@@ -88,8 +88,8 @@ namespace MajdataViewX.Notes.Updaters
             //slide的判TransformUpdate和生命周期有点耦合，把folded移到各个render去比较好
             if (slide.isEnd) return;
 
-            var tapTiming = TimeData.NoteTime - slide.tapTime;
-            var timing = TimeData.NoteTime - slide.shootTime;
+            var tapTiming = TimeData.noteTime - slide.tapTime;
+            var timing = TimeData.noteTime - slide.shootTime;
             slide.process = math.saturate(timing / math.max(slide.LastFor, 0.001f));
 
             if (slide.isSlideEnd)
@@ -109,7 +109,7 @@ namespace MajdataViewX.Notes.Updaters
                 if (slide.lastStayTime <= 0)
                 {
                     // render slideok不能用sv影响的时间
-                    slide.finishJudgeTiming = TimeData.NoteTime;
+                    slide.finishJudgeTiming = TimeData.noteTime;
                     EndSlide(ref slide);
                 }
                 slide.lastStayTime -= TimeData.deltaTime;
@@ -271,7 +271,7 @@ namespace MajdataViewX.Notes.Updaters
         private void AutoplayUpdate(ref SlideData slide)
         {
             if (slide.isEnd || slide.isSlideEnd) return;
-            var timing = TimeData.NoteTime - slide.shootTime;
+            var timing = TimeData.noteTime - slide.shootTime;
             if (timing < InputManager.AUTOPLAY_START_SEC) return;
             switch (NoteHelper.Settings.AutoPlayMode)
             {
@@ -322,7 +322,7 @@ namespace MajdataViewX.Notes.Updaters
                                     : grade;
                             }
                             // 非模拟模式下需要自行赋值finishJudgeTiming
-                            slide.finishJudgeTiming = TimeData.NoteTime;
+                            slide.finishJudgeTiming = TimeData.noteTime;
                             FinishJudgeSlide(ref slide);
                             EndSlide(ref slide);
                             if (slide.isFolded) EndNote(ref slide);
@@ -408,8 +408,8 @@ namespace MajdataViewX.Notes.Updaters
             if (slide.isEnd || slide.isSlideEnd || slide.isJudged) return;
 
             // slide的正解帧是 星星进入最后一个判定区的时间，所以判定部分受SV影响
-            var tapTiming = TimeData.NoteTime - slide.tapTime;
-            var timing = TimeData.NoteTime - slide.shootTime;
+            var tapTiming = TimeData.noteTime - slide.tapTime;
+            var timing = TimeData.noteTime - slide.shootTime;
 
             if (tapTiming < -NoteHelper.SLIDE_CHECK_AHEAD_TIME_MSEC / 1000f) return; // 提前100ms接受判定
             var remaining = slide.LastFor - timing;
@@ -418,7 +418,7 @@ namespace MajdataViewX.Notes.Updaters
             var forceJudge = timing - slide.LastFor - NoteHelper.SLIDE_FORCE_MISS / 1000f;
             // mine 星星 perfect 的时间点在slide结束
             // mineAutoSlide开着时直到倒数第二个区都会被滚木摸掉，此时最后一个区如果蹭到了就miss
-            bool timeout = slide.isMine ? (TimeData.NoteTime >= slide.judgeTiming) : (forceJudge >= 0);
+            bool timeout = slide.isMine ? (TimeData.noteTime >= slide.judgeTiming) : (forceJudge >= 0);
 
             if (timeout)
             {
@@ -614,7 +614,7 @@ namespace MajdataViewX.Notes.Updaters
                 return JudgeGrade.TooFast;
             }
 
-            var triggerTime = TimeData.NoteTime;
+            var triggerTime = TimeData.noteTime;
 
             const float totalInterval = 36f / 60; // 秒
             const float nPInterval = 14f / 60; // Perfect基础区间
@@ -656,7 +656,7 @@ namespace MajdataViewX.Notes.Updaters
         /// </summary>
         private void FinishJudgeSlide(ref SlideData slide)
         {
-            slide.judgeTime = TimeData.NoteTime;
+            slide.judgeTime = TimeData.noteTime;
             slide.isJudged = true;
         }
         /// <summary>
@@ -706,7 +706,7 @@ namespace MajdataViewX.Notes.Updaters
 
             // SlideOK fade-out animation (Just_curv animator equivalent):
             // fade out from 1→0 over SlideOKFadeOutDuration
-            var timing = TimeData.NoteTime - slide.finishJudgeTiming;
+            var timing = TimeData.noteTime - slide.finishJudgeTiming;
 
             slide.slideOKAlpha = timing switch
             {

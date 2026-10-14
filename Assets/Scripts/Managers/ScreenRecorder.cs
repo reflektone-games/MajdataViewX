@@ -17,10 +17,10 @@ namespace MajdataViewX.Managers
 
         [DllImport(EncoderDllName, CallingConvention = CallingConvention.StdCall)]
         private static extern IntPtr video_encoder_create(
-            int quality,
-            int width,
-            int height,
-            int fps,
+            int                                     quality,
+            int                                     width,
+            int                                     height,
+            int                                     fps,
             [MarshalAs(UnmanagedType.LPStr)] string filename);
 
         [DllImport(EncoderDllName, CallingConvention = CallingConvention.StdCall)]
@@ -32,9 +32,9 @@ namespace MajdataViewX.Managers
         private static extern int video_encoder_mux_audio(
             IntPtr encoder,
             IntPtr pcmData,
-            int pcmLengthBytes,
-            int sampleRate,
-            int channels);
+            int    pcmLengthBytes,
+            int    sampleRate,
+            int    channels);
 
         [DllImport(EncoderDllName, CallingConvention = CallingConvention.StdCall)]
         private static extern void video_encoder_free(IntPtr encoder);
@@ -49,7 +49,7 @@ namespace MajdataViewX.Managers
 
 
         public async UniTask StartRecording(string maidataPath,
-            int fps, ExportQuality quality, [CanBeNull] Action onStart = null)
+                                            int    fps, ExportQuality quality, [CanBeNull] Action onStart = null)
         {
             QualitySettings.vSyncCount = 0;
             try
@@ -68,33 +68,30 @@ namespace MajdataViewX.Managers
         }
 
         private async UniTask CaptureScreen(string maidataPath,
-            int fps, ExportQuality quality, [CanBeNull] Action onStart = null)
+                                            int    fps, ExportQuality quality, [CanBeNull] Action onStart = null)
         {
             if (fps <= 0)
-            {
-                _wsServer.Error("Encoding cannot start: Output frame rate must be greater than zero.");
                 return;
-            }
 
             const string finalName = "out.mp4";
 
             IsRecording = true;
             // H.264 (NV12) requires even dimensions
             // crop odd pixels so encoding always succeeds.
-            var width = Screen.width & ~1;
-            var height = Screen.height & ~1;
-            var frameDuration = 1.0 / fps;
+            var width                = Screen.width  & ~1;
+            var height               = Screen.height & ~1;
+            var frameDuration        = 1.0 / fps;
             var recordingElapsedTime = 0.0;
-            var outputSucceeded = false;
+            var outputSucceeded      = false;
             var captureTexture = new RenderTexture(
                 width,
                 height,
                 0,
                 RenderTextureFormat.BGRA32)
             {
-                name = "Screen Recorder Capture",
-                antiAliasing = 1,
-                useMipMap = false,
+                name             = "Screen Recorder Capture",
+                antiAliasing     = 1,
+                useMipMap        = false,
                 autoGenerateMips = false
             };
             var encoder = IntPtr.Zero;
@@ -149,7 +146,6 @@ namespace MajdataViewX.Managers
             catch (Exception e)
             {
                 Debug.LogException(e);
-                _wsServer.Error(e);
             }
             finally
             {
@@ -162,7 +158,6 @@ namespace MajdataViewX.Managers
                 {
                     outputSucceeded = false;
                     Debug.LogException(ex);
-                    _wsServer.Error(ex);
                 }
 
                 _audioManager.ReleaseRecordingAudio();
@@ -205,7 +200,6 @@ namespace MajdataViewX.Managers
         }
 
 
-
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
         [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr ShellExecuteW(
@@ -214,7 +208,7 @@ namespace MajdataViewX.Managers
             string file,
             string parameters,
             string directory,
-            int showCommand);
+            int    showCommand);
 #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
     [DllImport("libSystem.dylib", EntryPoint = "system")]
     private static extern int RunSystemCommand(string command);

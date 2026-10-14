@@ -39,7 +39,7 @@ namespace MajdataViewX.Notes.Updaters
 
         public void Execute(int index)
         {
-            if (!TimeData.IsStart)
+            if (!TimeData.isStart)
             {
                 SeeOnlyUpdate(touches[index], index);
                 return;
@@ -58,7 +58,7 @@ namespace MajdataViewX.Notes.Updaters
             var sortTime = ((timePart << 11) | (uint)(index & 0x7FF)) & 0x3FFFFFFF;
 
             var timing = touch.isIgnoreSV
-                ? TimeData.NoteTime - touch.time
+                ? TimeData.noteTime - touch.time
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(touch.time);
             if (timing > 0) return;
             var pow = -math.exp(8f * (timing * 0.43f / touch.moveDuration) - 0.85f) + 0.42f;
@@ -140,7 +140,7 @@ namespace MajdataViewX.Notes.Updaters
             var sortTime = ((timePart << 11) | (uint)(index & 0x7FF)) & 0x3FFFFFFF;
 
             var timing = touch.isIgnoreSV
-                ? TimeData.NoteTime - touch.time
+                ? TimeData.noteTime - touch.time
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(touch.time);
             var pow = -math.exp(8f * (timing * 0.43f / touch.moveDuration) - 0.85f) + 0.42f;
             var fanDist = math.clamp(pow, 0f, 0.4f);
@@ -239,7 +239,7 @@ namespace MajdataViewX.Notes.Updaters
             if (touch.isEnd) return;
             if (NoteHelper.Settings.AutoPlayMode is AutoPlayMode.Disable) return;
 
-            var timing = TimeData.NoteTime - touch.time;
+            var timing = TimeData.noteTime - touch.time;
             var autoplayStart = InputManager.AUTOPLAY_START_SEC;
 
             if (timing < autoplayStart) return;
@@ -269,7 +269,7 @@ namespace MajdataViewX.Notes.Updaters
             if (touch.isJudged || touch.isEnd) return;
             if (!NoteHelper.IsSimulated) return;
 
-            var noteTime = TimeData.NoteTime;
+            var noteTime = TimeData.noteTime;
             var diffSec = noteTime - touch.time;
 
             if (touch.isMine)

@@ -1,10 +1,8 @@
 ﻿#nullable enable
 
 using Cysharp.Threading.Tasks;
-using MajdataViewX.Types.Enums;
-using MajProtocol.Types.Enums;
+using MajProtocol.Standard.Packets;
 using UnityEngine;
-
 using static MajdataViewX.Base.MajCtx;
 
 namespace MajdataViewX.Managers
@@ -12,6 +10,7 @@ namespace MajdataViewX.Managers
     public class AllPerfectManager : MonoBehaviour
     {
         private static readonly int PlayAllPerfectHash = Animator.StringToHash("playAllPerfect");
+
         [SerializeField]
         private Animator allPerfect = null!;
 
@@ -29,22 +28,22 @@ namespace MajdataViewX.Managers
 
         private void Update()
         {
-            if (PlayManager.Summary.State is not ViewStatus.Playing)
+            if (!PlayManager.isPlaying)
                 return;
 
             if (!_objectCounter.AllFinished) return;
             if (_isPlayed)
             {
                 if (allPerfect.gameObject.activeSelf) return;
-                _playManager.StopAsync().Forget();
-                _wsServer.SendStopResponse();
+                _playManager.PauseAsync().Forget();
+                MajWebSocketServer.Broadcast(new PauseResponse { accepted = true });
             }
             else
             {
                 allPerfect.gameObject.SetActive(true);
                 allPerfect.SetTrigger(PlayAllPerfectHash);
                 _audioManager.noteSfxPlaybackRequests[AudioManager.ALL_PERFECT] = true;
-                _isPlayed = true;
+                _isPlayed                                                       = true;
             }
         }
 

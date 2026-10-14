@@ -863,7 +863,7 @@ namespace MajdataViewX.Managers
 
             public void Execute()
             {
-                var time = TimeData.DJAutoTime;
+                var time = TimeData.DjAutoTime;
                 // 先各自更新状态，再统一按权重分配尚未占用的 data。
                 UpdateHandState(0, time);
                 UpdateHandState(1, time);

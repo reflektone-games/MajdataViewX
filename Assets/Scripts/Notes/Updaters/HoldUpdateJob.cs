@@ -40,7 +40,7 @@ namespace MajdataViewX.Notes.Updaters
 
         public void Execute(int index)
         {
-            if (!TimeData.IsStart)
+            if (!TimeData.isStart)
             {
                 SeeOnlyUpdate(holds[index], index);
                 return;
@@ -57,7 +57,7 @@ namespace MajdataViewX.Notes.Updaters
 
             // ---- body ----
             var headTiming = hold.isIgnoreSV
-                ? TimeData.NoteTime - hold.time
+                ? TimeData.noteTime - hold.time
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(hold.time);
             var headDistance = headTiming * hold.speed + 4.8f;
             var clampedDistance = math.max(headDistance, 1.225f);
@@ -67,7 +67,7 @@ namespace MajdataViewX.Notes.Updaters
 
             // ---- Tail (hold end) ----
             var tailTiming = hold.isIgnoreSV
-                ? TimeData.NoteTime - (hold.time + hold.LastFor)
+                ? TimeData.noteTime - (hold.time + hold.LastFor)
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(hold.time + hold.LastFor);
             var tailDistance = tailTiming * hold.speed + 4.8f;
 
@@ -172,7 +172,7 @@ namespace MajdataViewX.Notes.Updaters
 
             // ---- body ----
             var headTiming = hold.isIgnoreSV
-                ? TimeData.NoteTime - hold.time
+                ? TimeData.noteTime - hold.time
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(hold.time);
             var headDistance = headTiming * hold.speed + 4.8f;
             var clampedDistance = math.max(headDistance, 1.225f);
@@ -182,7 +182,7 @@ namespace MajdataViewX.Notes.Updaters
 
             // ---- Tail (hold end) ----
             var tailTiming = hold.isIgnoreSV
-                ? TimeData.NoteTime - (hold.time + hold.LastFor)
+                ? TimeData.noteTime - (hold.time + hold.LastFor)
                 : TimeData.FakeNoteTime - TimeData.GetPositionAtTime(hold.time + hold.LastFor);
             var tailDistance = tailTiming * hold.speed + 4.8f;
 
@@ -343,7 +343,7 @@ namespace MajdataViewX.Notes.Updaters
             if (hold.isEnd) return;
             if (NoteHelper.Settings.AutoPlayMode is AutoPlayMode.Disable) return;
 
-            var timing = TimeData.NoteTime - hold.time;
+            var timing = TimeData.noteTime - hold.time;
             if (timing < InputManager.AUTOPLAY_START_SEC) return;
 
             switch (NoteHelper.Settings.AutoPlayMode)
@@ -401,7 +401,7 @@ namespace MajdataViewX.Notes.Updaters
             if (hold.isEnd) return;
             if (!NoteHelper.IsSimulated) return;
 
-            var noteTime = TimeData.NoteTime;
+            var noteTime = TimeData.noteTime;
             var timing = noteTime - hold.time;
 
             if (hold.isMine)
@@ -478,7 +478,7 @@ namespace MajdataViewX.Notes.Updaters
                 return;
             }
 
-            if (!TimeData.IsStart) return;
+            if (!TimeData.isStart) return;
 
             var btnStatus = InputData.GetButtonState(hold.Key);
             var senStatus = InputData.GetSensorState(hold.Key);

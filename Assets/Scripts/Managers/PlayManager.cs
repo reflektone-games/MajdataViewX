@@ -1,47 +1,36 @@
 #nullable enable
 
+using System;
+using System.IO;
+using System.Threading;
+using Cimai;
 using Cysharp.Threading.Tasks;
 using MajdataViewX.Base;
 using MajdataViewX.Notes;
 using MajdataViewX.Notes.SlideUtils;
 using MajdataViewX.Types.MajSetting;
-using Cimai;
-using MajProtocol.Types;
-using MajProtocol.Types.Enums;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using Unity.Properties;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
 using static MajdataViewX.Base.MajCtx;
+using ThreadPriority = System.Threading.ThreadPriority;
 
 namespace MajdataViewX.Managers
 {
     public class PlayManager : MonoBehaviour
     {
-        public static ViewSummary Summary => new()
-        {
-            State = _state,
-            ErrMsg = _errMsg,
-        };
-
-        private static ViewStatus _state = ViewStatus.Idle;
-        private static string _errMsg = string.Empty;
+        public static bool isBusy;
+        public static bool isPlaying;
+        public static bool filesLoaded;
 
         private static Thread? _audioManagerThread;
-        private static int _audioManagerThreadRunning;
+        private static int     _audioManagerThreadRunning;
 
         private static MajViewSetting _setting = new();
-        private static float _currentOffset;
-        private static SimaiChart? _chart;
+        private static float          _currentOffset;
+        private static SimaiChart?    _chart;
 
-        private SpriteRenderer _bgCover = null!;
+        private SpriteRenderer _bgCover        = null!;
         private SpriteRenderer _bgOutsideCover = null!;
-        private GameObject _canvasButtons = null!;
+        private GameObject     _canvasButtons  = null!;
 
         private void Awake()
         {
@@ -51,9 +40,9 @@ namespace MajdataViewX.Managers
         // 这里是游戏内部的东西的启动初始化
         private void Start()
         {
-            _bgCover = GameObject.Find("BgCover").GetComponent<SpriteRenderer>();
+            _bgCover        = GameObject.Find("BgCover").GetComponent<SpriteRenderer>();
             _bgOutsideCover = GameObject.Find("BgOutsideCover").GetComponent<SpriteRenderer>();
-            _canvasButtons = GameObject.Find("CanvasButtons");
+            _canvasButtons  = GameObject.Find("CanvasButtons");
 
             _ = new AudioManager();
             Volatile.Write(ref _audioManagerThreadRunning, 1);
@@ -67,17 +56,17 @@ namespace MajdataViewX.Managers
             })
             {
                 IsBackground = true,
-                Name = "Majdata SFX Trigger",
-                Priority = System.Threading.ThreadPriority.AboveNormal,
+                Name         = "Majdata SFX Trigger",
+                Priority     = ThreadPriority.AboveNormal,
             };
             _audioManagerThread.Start();
 
             MajBurst.__DataSS.Data = new MajBurstData
             {
-                TimeData = new(),
-                InputData = new(),
+                TimeData         = new(),
+                InputData        = new(),
                 MultTouchHandler = new(),
-                GlobalRandom = new((uint)"MajdataX".GetHashCode()),
+                GlobalRandom     = new((uint)"MajdataX".GetHashCode()),
             };
             //MajBurst.TimeData.Init();
             MajBurst.InputData.Init();
@@ -90,23 +79,19 @@ namespace MajdataViewX.Managers
         }
 
         private bool CheckIsLoaded() => _audioManager.IsTrackLoaded &&
-                                        _bgManager.IsBgLoaded &&
+                                        _bgManager.IsBgLoaded       &&
                                         _bgManager.IsVideoLoaded;
 
         public async UniTask LoadAsync(string audioPath, string bgPath, string? pvPath)
         {
-            while (_state is ViewStatus.Busy)
-                await UniTask.Yield();
-            _state = ViewStatus.Busy;
+            await UniTask.WaitUntil(() => !isBusy);
 
             try
             {
                 await UniTask.SwitchToMainThread();
 
-                //audio
                 _audioManager.LoadTrack(audioPath);
 
-                //bg
                 if (File.Exists(bgPath))
                 {
                     BgManager.HasBg = true;
@@ -117,7 +102,6 @@ namespace MajdataViewX.Managers
                     BgManager.HasBg = false;
                 }
 
-                //video
                 if (pvPath is not null && File.Exists(pvPath))
                 {
                     BgManager.HasVideo = true;
@@ -128,12 +112,11 @@ namespace MajdataViewX.Managers
                     BgManager.HasVideo = false;
                 }
 
-                _state = ViewStatus.Loaded;
+                filesLoaded = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _errMsg = ex.ToString();
-                _state = ViewStatus.Error;
+                filesLoaded = false;
             }
         }
 
@@ -141,14 +124,14 @@ namespace MajdataViewX.Managers
         {
             _setting = setting;
 
-            NoteHelper.NoteSettingsSS.Data = new NoteSettings()
+            NoteHelper.NoteSettingsSS.Data = new NoteSettings
             {
-                AutoPlayMode = _setting.AutoMode,
-                TapSpeed = (float)(107.25 / (71.4184491 * Mathf.Pow(_setting.TapSpeed + 0.9975f, -0.985558604f))),
-                TouchSpeed = _setting.TouchSpeed,
+                AutoPlayMode     = _setting.AutoMode,
+                TapSpeed         = (float)(107.25 / (71.4184491 * Mathf.Pow(_setting.TapSpeed + 0.9975f, -0.985558604f))),
+                TouchSpeed       = _setting.TouchSpeed,
                 LegacySlideLayer = _setting.LegacySlideLayer,
                 SmoothSlideAnime = _setting.SmoothSlideAnime,
-                MineAutoSlide = _setting.MineAutoSlide,
+                MineAutoSlide    = _setting.MineAutoSlide,
             };
             //audio
             _audioManager.Setting(setting.GlobalAudioOffset, volumeSetting);
@@ -157,33 +140,30 @@ namespace MajdataViewX.Managers
             //counter
             _objectCounter.Setting(_setting.ComboStatusType, _setting.UIType);
             //bg
-            _bgCover.color = new Color(0f, 0f, 0f, _setting.BackgroundDim);
+            _bgCover.color        = new Color(0f, 0f, 0f, _setting.BackgroundDim);
             _bgOutsideCover.color = new Color(0f, 0f, 0f, _setting.BackgroundOutsideDim);
-            _bgManager.resizeBg = _setting.ResizeBg;
+            _bgManager.resizeBg   = _setting.ResizeBg;
         }
 
         public async UniTask ParseAsync(
             string? chartText,
-            int clockCount,
-            float offset,
-            string title,
-            string artist,
-            string level,
-            string designer,
-            int difficulty)
+            int     clockCount,
+            double  offset,
+            string  title,
+            string  artist,
+            string  level,
+            string  designer,
+            int     difficulty)
         {
-            while (_state is ViewStatus.Busy)
-                await UniTask.Yield();
-
-            var previousState = _state;
-            _state = ViewStatus.Busy;
+            await UniTask.WaitUntil(() => !isBusy);
+            isBusy = true;
 
             var chart = SimaiChart.Parse(chartText ?? string.Empty);
 
             _chart?.Dispose();
-            _chart = chart;
-            _currentOffset = offset;
-            _timeProvider.offset = offset;
+            _chart               = chart;
+            _currentOffset       = (float)offset;
+            _timeProvider.offset = (float)offset;
 
             //answer
             _audioManager.GenerateAnswerSFX(chart, clockCount);
@@ -194,25 +174,30 @@ namespace MajdataViewX.Managers
             _objectCounter.ReportMeterBpm(chart);
 
             await _dataLoader.Load(chart, title, artist, level, designer, difficulty);
-
-            _state = previousState;
+            isBusy = false;
         }
 
-        public async UniTask PlayAsync(PlaybackMode playmode, double startAt, float speed, string recordPath)
+        public async UniTask PlayAsync(double startAt, bool showIntro, string recordPath)
         {
-            while (_state is ViewStatus.Busy)
-                await UniTask.Yield();
+            await UniTask.WaitUntil(() => !isBusy);
 
-            if (_state is not (ViewStatus.Loaded or ViewStatus.Paused))
+            if (!filesLoaded || isPlaying)
                 return;
 
-            // metadata 与谱面装载都在 Parse 阶段完成，这里只管启动。
-            _state = ViewStatus.Busy;
+            isBusy = true;
+            var isRecording = string.IsNullOrEmpty(recordPath);
+
             try
             {
                 await UniTask.SwitchToMainThread();
 
                 var ignoreOffset = startAt - _currentOffset;
+
+                _timeProvider.ResetState();
+                _audioManager.ResetState();
+                _bgManager.ResetState();
+                _effectManager.ResetState();
+                _allPerfectManager.ResetState();
 
                 //bg
                 _bgManager.ShowBg();
@@ -229,71 +214,63 @@ namespace MajdataViewX.Managers
                 _noteManager.ResetLoadedPlay(ignoreOffset);
                 MajBurst.MultTouchHandler.ResetMultTouchState();
 
-                switch (playmode)
+                _allPerfectManager.enabled = showIntro;
+
+                if (showIntro)
                 {
-                    case PlaybackMode.Normal:
-                        _allPerfectManager.enabled = false;
-
-                        _timeProvider.SetStartTime(startAt, _currentOffset, speed, playmode);
-                        _audioManager.PlayTrack();
-                        break;
-                    case PlaybackMode.IncludeOp:
-                        _allPerfectManager.enabled = true;
-
-                        _bgManager.PlaySongDetail();
-                        _audioManager.noteSfxPlaybackRequests[AudioManager.TRACK_START] = true; //track_start
-
-                        _timeProvider.SetStartTime(startAt, _currentOffset, speed, playmode);
-                        _audioManager.PlayTrack();
-                        break;
-                    case PlaybackMode.Record:
-                        if (!Directory.Exists(recordPath))
-                        {
-                            throw new InvalidPathException($"maidata path is required");
-                        }
-
-                        _canvasButtons.SetActive(false);
-                        _allPerfectManager.enabled = true;
-
-                        _bgManager.PlaySongDetail();
-                        _screenRecorder.StartRecording(recordPath,
-                            _setting.OutputFps, _setting.ExportQuality,
-                            () =>
-                            {
-                                _timeProvider.SetStartTime(startAt, _currentOffset, speed, playmode, _setting.OutputFps);
-                            }).ContinueWith(() =>
-                        {
-                            _canvasButtons.SetActive(true);
-                            _state = ViewStatus.Loaded;
-                        }).Forget();
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(playmode), playmode, null);
+                    _audioManager.noteSfxPlaybackRequests[AudioManager.TRACK_START] = true;
+                    _bgManager.PlaySongDetail();
                 }
 
-                _state = ViewStatus.Playing;
-                return;
+                if (isRecording)
+                {
+                    _screenRecorder.StartRecording(recordPath, _setting.OutputFps, _setting.ExportQuality,
+                                                   () =>
+                                                   {
+                                                       _timeProvider.SetStartTime(
+                                                           startAt, _currentOffset, showIntro, _setting.OutputFps
+                                                       );
+                                                   })
+                                   .ContinueWith(() =>
+                                   {
+                                       _canvasButtons.SetActive(true);
+                                       isPlaying = false;
+                                   }).Forget();
+                }
+                else
+                {
+                    _canvasButtons.SetActive(true);
+                    _audioManager.PlayTrack();
+                    _timeProvider.SetStartTime(startAt, _currentOffset, showIntro);
+                }
+
+                isPlaying = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _errMsg = ex.ToString();
-                _state = ViewStatus.Error;
-                return;
+                isPlaying = false;
+            }
+            finally
+            {
+                isBusy = false;
             }
         }
 
         public async UniTask PauseAsync()
         {
-            while (_state is ViewStatus.Busy)
-                await UniTask.Yield();
+            await UniTask.WaitUntil(() => !isBusy);
 
-            if (_state is not ViewStatus.Playing)
+            if (isPlaying)
                 return;
 
-            _state = ViewStatus.Busy;
+            isBusy = true;
+
             try
             {
                 await UniTask.SwitchToMainThread();
+
+                _screenRecorder.StopRecording();
+                await UniTask.Yield();
 
                 _timeProvider.Pause();
 
@@ -302,56 +279,20 @@ namespace MajdataViewX.Managers
                 _audioManager.PauseTrack();
                 _audioManager.PauseTouchHoldSound();
 
-                _state = ViewStatus.Paused;
+                isPlaying = false;
             }
-            catch (Exception ex)
+            finally
             {
-                _errMsg = ex.ToString();
-                _state = ViewStatus.Error;
+                isBusy = false;
             }
         }
 
-        /// <summary>
-        /// 从暂停中恢复播放（MajProtocol 新增的 Resume 通道对应）。
-        /// </summary>
-        public async UniTask ResumeAsync()
+
+        public async UniTask UnloadAsync()
         {
-            while (_state is ViewStatus.Busy)
-                await UniTask.Yield();
+            await UniTask.WaitUntil(() => !isBusy);
+            isBusy = true;
 
-            if (_state is not ViewStatus.Paused)
-                return;
-
-            _state = ViewStatus.Busy;
-            try
-            {
-                await UniTask.SwitchToMainThread();
-
-                _timeProvider.Resume(null);
-
-                _bgManager.ResumeVideo();
-
-                _audioManager.ResumeTrack();
-                _audioManager.ResumeTouchHoldSound();
-
-                _state = ViewStatus.Playing;
-            }
-            catch (Exception ex)
-            {
-                _errMsg = ex.ToString();
-                _state = ViewStatus.Error;
-            }
-        }
-
-        public async UniTask StopAsync()
-        {
-            while (_state is ViewStatus.Busy)
-                await UniTask.Yield();
-
-            if (_state is not (ViewStatus.Playing or ViewStatus.Paused or ViewStatus.Error))
-                return;
-
-            _state = ViewStatus.Busy;
             try
             {
                 await UniTask.SwitchToMainThread();
@@ -365,13 +306,10 @@ namespace MajdataViewX.Managers
                 _bgManager.ResetState();
                 _effectManager.ResetState();
                 _allPerfectManager.ResetState();
-
-                _state = CheckIsLoaded() ? ViewStatus.Loaded : ViewStatus.Idle;
             }
-            catch (Exception ex)
+            finally
             {
-                _errMsg = ex.ToString();
-                _state = ViewStatus.Error;
+                isBusy = false;
             }
         }
 
@@ -383,6 +321,7 @@ namespace MajdataViewX.Managers
             {
                 _audioManagerThread.Join();
             }
+
             _audioManagerThread = null;
 
             _audioManager.OnDestroy();
